@@ -8,8 +8,8 @@ android {
 
     defaultConfig {
         applicationId "com.example.majorproject"
-        minSdk 28
-        targetSdk 31
+        minSdk 29
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -36,6 +36,7 @@ dependencies {
 
     implementation 'com.mappls.sdk:mappls-android-sdk:8.0.8'
     implementation 'com.mappls.sdk:direction-ui:1.0.0'
+    implementation 'androidx.preference:preference:1.2.1'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

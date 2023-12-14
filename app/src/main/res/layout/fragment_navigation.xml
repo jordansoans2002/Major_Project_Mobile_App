@@ -35,10 +35,11 @@
                 android:layout_marginTop="8dp"
                 android:background="@android:drawable/editbox_background"
                 android:includeFontPadding="true"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:text="Current location"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.37"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -49,7 +50,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@android:drawable/editbox_background"
                 android:includeFontPadding="true"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:text="Enter stops"
                 android:textSize="16sp"
                 android:visibility="gone"
@@ -65,7 +66,7 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
                 android:background="@android:drawable/editbox_background_normal"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:text="Enter destination"
                 android:textAlignment="textStart"
                 android:textSize="16sp"
@@ -109,7 +110,7 @@
                 android:id="@+id/set_stop"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="6dp"
                 android:src="@drawable/add_location"
                 app:layout_constraintBottom_toBottomOf="@+id/destination_input"
                 app:layout_constraintStart_toEndOf="@+id/origin_input"
@@ -189,4 +190,4 @@
             android:elevation="4dp"
             android:visibility="gone" />
     </LinearLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
