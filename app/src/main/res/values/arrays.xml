@@ -9,4 +9,28 @@
         <item>reply</item>
         <item>reply_all</item>
     </string-array>
+
+    <string-array name="recording_preferences">
+        <item>Record black box only</item>
+        <item>Record entire journey</item>
+        <item>Don\'t record</item>
+    </string-array>
+
+    <string-array name="recording_values">
+        <item>black_box</item>
+        <item>journey</item>
+        <item>disabled</item>
+    </string-array>
+
+    <string-array name="black_box_preferences">
+        <item>15 seconds</item>
+        <item>30 seconds</item>
+        <item>60 seconds</item>
+    </string-array>
+
+    <string-array name="black_box_values">
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+    </string-array>
 </resources>

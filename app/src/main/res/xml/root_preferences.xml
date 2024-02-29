@@ -1,35 +1,72 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="@string/messages_header">
+    <PreferenceCategory app:title="Connectivity">
 
-        <EditTextPreference
-            app:key="signature"
-            app:title="@string/signature_title"
+        <SwitchPreferenceCompat
+            app:key="autoBluetooth"
+            app:title="Automatically turn on Bluetooth"
+            app:summary="Automatically turn on Bluetooth when app starts "
+            app:defaultValue="true"/>
+
+        <SwitchPreferenceCompat
+            app:key="autoReConnect"
+            app:title="Auto re-connect"
+            app:summaryOn="Automatically re-connects to the last connected Helmet when app starts "
+            app:summaryOff="Connect to helmet manually"
+            app:defaultValue="true"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Recording">
+
+        <SwitchPreferenceCompat
+            app:key="autoRecord"
+            app:title="Automatically start recording"
+            app:summaryOn="Recording starts automatically when journey starts"
+            app:summaryOff="Recording must be started manually from recordings tab"
+            app:defaultValue="true"/>
+
+        <ListPreference
+            app:key="recordMode"
+            app:title="Recording preferences"
+            app:dependency="autoRecord"
+            app:defaultValue="black_box"
+            app:entries="@array/recording_preferences"
+            app:entryValues="@array/recording_values"
             app:useSimpleSummaryProvider="true" />
 
         <ListPreference
-            app:defaultValue="reply"
-            app:entries="@array/reply_entries"
-            app:entryValues="@array/reply_values"
-            app:key="reply"
-            app:title="@string/reply_title"
+            app:key="black_box_duration"
+            app:title="Black box duration"
+            app:dependency="recordMode"
+            app:defaultValue="30"
+            app:entries="@array/black_box_preferences"
+            app:entryValues="@array/black_box_values"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/sync_header">
+    <PreferenceCategory app:title="Emergency Response">
+        <SwitchPreference
+            app:key="enableResponse"
+            app:title="Enable emergency response"
+            app:defaultValue="true"
+            app:summary="Performs the selected actions if an accident is detected" />
 
-        <SwitchPreferenceCompat
-            app:key="sync"
-            app:title="@string/sync_title" />
+        <SwitchPreference
+            app:key="location"
+            app:title="Send location"
+            app:dependency="enableResponse"
+            app:defaultValue="true"
+            app:summary="Send location where accident is detected to all emergency contacts" />
 
-        <SwitchPreferenceCompat
-            app:dependency="sync"
-            app:key="attachment"
-            app:summaryOff="@string/attachment_summary_off"
-            app:summaryOn="@string/attachment_summary_on"
-            app:title="@string/attachment_title" />
+        <SwitchPreference
+            app:key="black_box_recording"
+            app:title="Send black box recording"
+            app:dependency="enableResponse"
+            app:defaultValue="false"
+            app:summary="Send black box recording along with alert to emergency contacts" />
 
     </PreferenceCategory>
-
 </PreferenceScreen>
