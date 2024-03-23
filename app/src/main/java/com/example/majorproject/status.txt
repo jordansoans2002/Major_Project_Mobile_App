@@ -1,0 +1,8 @@
+//fix
+- when users long press to set the location update the search bar
+
+//create
+- a background activity for navigation so the app keeps running even when the display is off
+- integrate voice commands to turn off the navigation
+- draw multiple route polylines and allow user to choose route
+- manage bluetooth connection to the helmet

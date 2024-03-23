@@ -48,5 +48,5 @@ google-services.json
 # Android Profiling
 *.hprof
 /app/src/androidTest/java/
-/app/src/main/java/
+#/app/src/main/java/
 /app/src/test/java/
