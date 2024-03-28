@@ -150,7 +150,16 @@ public class BluetoothConnectionManager {
         }).start();
     }
 
-    public boolean sendData(String data){
+    public static boolean sendData(String data){
+        try {
+            outputStream.write(data.getBytes(StandardCharsets.UTF_8));
+            Timber.i("data sent to helmet");
+            return true;
+        } catch (IOException e){
+            e.printStackTrace();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         return false;
     }
 }

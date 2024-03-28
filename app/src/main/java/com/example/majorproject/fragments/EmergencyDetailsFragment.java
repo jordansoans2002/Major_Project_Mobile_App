@@ -3,7 +3,6 @@ package com.example.majorproject.fragments;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -87,17 +86,6 @@ public class EmergencyDetailsFragment extends Fragment {
                 editDetails.putLong("contact"+(i+1),contacts[i]);
             }
             editDetails.apply();
-
-            //TODO move this to NavigationService
-            //include user details in the sms
-            //TODO video send in future scope
-            SmsManager smsManager = SmsManager.getDefault();
-            for(long contact : contacts) {
-                if(contact>999999999)
-                    smsManager.sendTextMessage("+91"+contact, null, "Smart helmet has detected a possible incident at http://maps.google.com/maps?saddr"
-                            +NavigationFragment.currentLocation.getLatitude()+','+NavigationFragment.currentLocation.getLongitude(),
-                            null, null);
-            }
         });
     }
 }

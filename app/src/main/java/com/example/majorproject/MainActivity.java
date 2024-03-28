@@ -1,5 +1,6 @@
 package com.example.majorproject;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -14,6 +15,8 @@ import com.example.majorproject.fragments.HomeFragment;
 import com.example.majorproject.fragments.NavigationFragment;
 import com.example.majorproject.fragments.RecordingsFragment;
 import com.example.majorproject.fragments.SettingsFragment;
+import com.example.majorproject.service.BluetoothService;
+import com.example.majorproject.utils.CrashResponse;
 import com.example.majorproject.utils.LocationSettingsManager;
 import com.example.majorproject.utils.ObjectWrapperForBinder;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -33,8 +36,12 @@ public class MainActivity extends AppCompatActivity {
 //            Timber.plant(new FileLoggingTree());
         }
 
+        enableBT_Location();
+
         initMapplsAPI();
         setContentView(R.layout.activity_main);
+
+        CrashResponse.initDetails(this);
 
         Intent intent = getIntent();
         if(intent.getBooleanExtra("journeyStarted",false)) {
@@ -69,6 +76,18 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    void enableBT_Location(){
+        boolean auto = BluetoothService.setupBluetooth(this);
+        if(auto && !BluetoothService.isBluetoothOn()){
+            try {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivity(enableBtIntent);
+            }catch (SecurityException se){
+                //TODO manage permissions
+            }
+        }
+    }
+
     void initMapplsAPI() {
         MapplsAccountManager.getInstance().setRestAPIKey("d066b76c53719c5da933efda3d206f2e");
         MapplsAccountManager.getInstance().setMapSDKKey("d066b76c53719c5da933efda3d206f2e");
@@ -83,4 +102,5 @@ public class MainActivity extends AppCompatActivity {
         fragmentTransaction.replace(R.id.frame_layout,fragment);
         fragmentTransaction.commit();
     }
+
 }

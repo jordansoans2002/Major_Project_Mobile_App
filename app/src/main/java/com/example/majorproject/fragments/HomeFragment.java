@@ -39,7 +39,7 @@ public class HomeFragment extends Fragment {
     ProgressBar scanning;
 
     public static List<BluetoothDevice> devices = new ArrayList<>();
-    IntentFilter intentFilter;
+
     BroadcastReceiver btUpdates = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -51,6 +51,9 @@ public class HomeFragment extends Fragment {
                         case BluetoothAdapter.STATE_ON:
                             enableBTPrompt.setVisibility(View.GONE);
                             btDevices.setVisibility(View.VISIBLE);
+                            break;
+                        case BluetoothAdapter.STATE_TURNING_ON:
+                            BluetoothService.startDiscovery(HomeFragment.this.getActivity());
                             break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
                             enableBTPrompt.setText(R.string.enable_bluetooth_prompt);
@@ -83,9 +86,23 @@ public class HomeFragment extends Fragment {
                             Timber.d(String.valueOf(devices.size()));
                         }
                     }catch (SecurityException se){
-                        Timber.d("Bluetooth permissions missing");
+                        Timber.e("Bluetooth permissions missing");
                     }
                     break;
+            }
+        }
+    };
+
+    BroadcastReceiver btMessages = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction() == null)
+                return;
+            else if(intent.getAction().equals("BT_DATA_IN")){
+                String msg = intent.getStringExtra("msg");
+                int bytes = intent.getIntExtra("msg_size",-1);
+                Timber.i("BT message %s size, %i",msg,bytes);
+                //update helmet info like battery left etc
             }
         }
     };
@@ -116,6 +133,7 @@ public class HomeFragment extends Fragment {
 
         reScan.setOnClickListener((v) -> {
             //this searches for available devices
+//            boolean f = BluetoothConnectionManager.startDiscovery(this.getActivity());
             boolean f = BluetoothService.startDiscovery(this.getActivity());
             if (!f)
                 Toast.makeText(this.getContext(),
@@ -131,34 +149,28 @@ public class HomeFragment extends Fragment {
         scanning.setOnClickListener((v) -> {
             reScan.setVisibility(View.VISIBLE);
             scanning.setVisibility(View.GONE);
+//            BluetoothConnectionManager.stopDiscovery();
             BluetoothService.stopDiscovery();
         });
 
-        intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
-//        this.getActivity().registerReceiver(btUpdates, intentFilter);
-
-        boolean autoBluetooth = BluetoothService.setupBluetooth(this.getActivity());
-        if(autoBluetooth){
-            btDevices.setVisibility(View.VISIBLE);
-            enableBTPrompt.setVisibility(View.GONE);
-        } else {
-            btDevices.setVisibility(View.GONE);
-            enableBTPrompt.setText(R.string.enable_bluetooth_prompt);
-            enableBTPrompt.setVisibility(View.VISIBLE);
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivity(enableBtIntent);
-        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        this.getActivity().registerReceiver(btUpdates, intentFilter);
 
+        IntentFilter updatesIntentFilter = new IntentFilter();
+        updatesIntentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        updatesIntentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        updatesIntentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        updatesIntentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+
+        IntentFilter messagesIntentFilter = new IntentFilter("BT_DATA_IN");
+
+        this.getActivity().registerReceiver(btUpdates, updatesIntentFilter);
+        this.getActivity().registerReceiver(btMessages, messagesIntentFilter);
+
+//        if(BluetoothConnectionManager.isBluetoothOn()){
         if(BluetoothService.isBluetoothOn()){
             btDevices.setVisibility(View.VISIBLE);
             enableBTPrompt.setVisibility(View.GONE);
@@ -170,9 +182,11 @@ public class HomeFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onPause() {
+        super.onPause();
         this.getActivity().unregisterReceiver(btUpdates);
+        this.getActivity().unregisterReceiver(btMessages);
+//        BluetoothConnectionManager.stopDiscovery();
         BluetoothService.stopDiscovery();
     }
 }

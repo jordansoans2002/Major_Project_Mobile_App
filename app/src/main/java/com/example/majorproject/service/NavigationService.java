@@ -5,8 +5,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.location.Location;
@@ -20,6 +22,7 @@ import androidx.core.app.NotificationCompat;
 import com.example.majorproject.MainActivity;
 import com.example.majorproject.R;
 import com.example.majorproject.fragments.NavigationFragment;
+import com.example.majorproject.utils.CrashResponse;
 import com.example.majorproject.utils.ObjectWrapperForBinder;
 import com.mappls.sdk.geojson.Point;
 import com.mappls.sdk.maps.location.engine.LocationEngine;
@@ -55,6 +58,26 @@ public class NavigationService extends Service {
     LocationEngine locationEngine;
     static final long DEFAULT_INTERVAL_IN_ms = 1000L;
     static final long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_ms * 3;
+
+    BroadcastReceiver btMessages = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction() == null)
+                return;
+            else if(intent.getAction().equals("BT_DATA_IN")){
+                String msg = intent.getStringExtra("msg");
+                int bytes = intent.getIntExtra("msg_size",-1);
+                if(msg==null)
+                    return;
+                Timber.i("BT message %s size, %i",msg,bytes);
+
+                if(msg.startsWith("CRASH")){
+                    CrashResponse.sendSms(currentLocation);
+                }
+            }
+        }
+    };
+
     LocationEngineCallback<LocationEngineResult> locationEngineCallback = new LocationEngineCallback<LocationEngineResult>() {
         @Override
         public void onSuccess(LocationEngineResult locationEngineResult) {
@@ -77,6 +100,17 @@ public class NavigationService extends Service {
                 if(dist < 10 && currentStepNo<steps.size()-1)
                     currentStep = steps.get(++currentStepNo);
 
+                String msg = currentStep.maneuver().modifier()+" angle: b"
+                        + currentStep.maneuver().bearingBefore()+" a"+currentStep.maneuver().bearingAfter();
+
+                Timber.i("Sending data to bt %s",msg);
+
+                Intent data_out = new Intent(NavigationService.this, BluetoothService.class);
+                data_out.setAction("SEND_DATA");
+                data_out.putExtra("BT_DATA",msg);
+                startService(data_out);
+
+
                 journey.setContentTitle("Turn upcoming in "+(int)dist+" m");
                 journey.setContentText(DirectionsUtils.getTextInstructions((currentStep)));
 //                journey.setProgress(steps.size(),currentStepNo,false);
@@ -86,11 +120,24 @@ public class NavigationService extends Service {
 
         @Override
         public void onFailure(@NonNull Exception e) {
+            Timber.e("location fetch failed");
             e.printStackTrace();
         }
     };
 
     public NavigationService() {
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        registerReceiver(btMessages,new IntentFilter("BT_DATA_IN"));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(btMessages);
     }
 
     @Override

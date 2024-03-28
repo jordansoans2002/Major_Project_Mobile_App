@@ -31,14 +31,11 @@ public class BluetoothService extends Service {
     Handler handler;
     final int handlerState = 0;
     boolean stopThread;
-    private StringBuilder recDataString = new StringBuilder();
     private ConnectingThread connectingThread;
     private ConnectedThread connectedThread;
     private static String UUID_STRING = "00001101-0000-1000-8000-00805F9B34FB";
     static BluetoothAdapter bluetoothAdapter;
-//    static BluetoothSocket bluetoothSocket;
-//    public static InputStream inputStream;
-//    public static OutputStream outputStream;
+
 
     static SharedPreferences btSettings;
 
@@ -65,8 +62,10 @@ public class BluetoothService extends Service {
                 //TODO show only our helmets
                 if (device.getAddress().equals(lastHelmetMAC)) {
                     devices.add(0, device);
-                    if (btSettings.getBoolean("autoReConnect", false));
-                        // createBluetoothConnection(device,activity); // call via thread
+                    if (btSettings.getBoolean("autoReConnect", false)) {
+//                        connectingThread = new ConnectingThread(device);
+//                        connectingThread.start();
+                    }
                 } else
                     devices.add(device);
             }
@@ -157,41 +156,45 @@ public class BluetoothService extends Service {
 
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Timber.i("bluetooth service created");
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Timber.i("bluetooth service created with intent %s",intent.getAction());
+        if(intent.getAction().equals("CONNECT")) {
+
+            String helmet_MAC = intent.getStringExtra("helmet_MAC");
+            if (bluetoothAdapter.isEnabled() && helmet_MAC != null || !Objects.equals(helmet_MAC, "")) {
+                try {
+                    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(helmet_MAC);
+                    connectingThread = new ConnectingThread(device);
+                    connectingThread.start();
+                } catch (IllegalArgumentException e) {
+                    Timber.e("Illegal mac %s", helmet_MAC);
+                }
+            } else {
+                stopSelf();
+            }
+        } else if (intent.getAction().equals("DISCONNECT")) {
+            if(connectedThread != null)
+                connectedThread.closeStreams();
+            if(connectingThread != null)
+                connectingThread.closeSocket();
+        } else if (intent.getAction().equals("SEND_DATA")) {
+            String d = intent.getStringExtra("BT_DATA");
+            if(connectedThread!=null && d!=null)
+                connectedThread.write(d);
+            else
+                Timber.e("couldnt send message to helmet");
+        }
+        return START_STICKY;
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Timber.i("bluetooth service created");
-        handler = new Handler() {
-            public void handleMessage(android.os.Message msg){
-                Timber.i("handler message");
-                if(msg.what == handlerState){
-                    String readMessage = (String) msg.obj;
-                    recDataString.append(readMessage);
-                }
-                recDataString.delete(0,recDataString.length());
-            }
-        };
-
-        String helmet_MAC = intent.getStringExtra("helmet_MAC");
-        if(bluetoothAdapter.isEnabled() && helmet_MAC != null || !Objects.equals(helmet_MAC, "")){
-            try {
-                BluetoothDevice device = bluetoothAdapter.getRemoteDevice(helmet_MAC);
-                connectingThread = new ConnectingThread(device);
-                connectingThread.start();
-            } catch (IllegalArgumentException e){
-                Timber.e("Illegal mac %s", helmet_MAC);
-            }
-        } else {
-            stopSelf();
-        }
-        return super.onStartCommand(intent, flags, startId);
+    public void onDestroy() {
+        super.onDestroy();
+        if(connectedThread != null)
+            connectedThread.closeStreams();
+        if(connectingThread != null)
+            connectingThread.closeSocket();
     }
-
-
 
     @Nullable
     @Override
@@ -265,24 +268,38 @@ public class BluetoothService extends Service {
         }
 
         public void run() {
-            Log.d("DEBUG BT", "IN CONNECTED THREAD RUN");
-            byte[] buffer = new byte[256];
+            Timber.d("IN CONNECTED THREAD RUN");
+            byte[] buffer = new byte[1024];
             int bytes;
 
             // Keep looping to listen for received messages
-            while (!stopThread) {
-                try {
+            try {
+                Intent tst = new Intent("BT_DATA_IN");
+                tst.putExtra("msg","test message");
+                sendBroadcast(tst);
+
+                while (!stopThread) {
                     bytes = inputStream.read(buffer);            //read bytes from input buffer
                     String readMessage = new String(buffer, 0, bytes);
-                    Log.d("DEBUG BT PART", "CONNECTED THREAD " + readMessage);
+                    Timber.d("Received message %s", readMessage);
+
+                    if(readMessage.startsWith("CRASH")){
+
+                    }
+
+                    Intent data_in = new Intent("BT_DATA_IN");
+                    data_in.putExtra("msg",readMessage);
+                    data_in.putExtra("msg_size",bytes);
+                    sendBroadcast(data_in);
+
                     // Send the obtained bytes to the UI Activity via handler
                     handler.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
-                } catch (IOException e) {
-                    Log.d("DEBUG BT", e.toString());
-                    Log.d("BT SERVICE", "UNABLE TO READ/WRITE, STOPPING SERVICE");
-                    stopSelf();
-                    break;
                 }
+                inputStream.close();
+            } catch (IOException e) {
+                Log.d("DEBUG BT", e.toString());
+                Log.d("BT SERVICE", "UNABLE TO READ/WRITE, STOPPING SERVICE");
+                stopSelf();
             }
         }
 
@@ -290,12 +307,14 @@ public class BluetoothService extends Service {
         public void write(String input) {
             byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
             try {
+                Timber.i("BT thread sending %s ", input);
                 outputStream.write(msgBuffer);                //write bytes over BT connection via outstream
             } catch (IOException e) {
                 //if you cannot write, close the application
                 Log.d("DEBUG BT", "UNABLE TO READ/WRITE " + e.toString());
                 Log.d("BT SERVICE", "UNABLE TO READ/WRITE, STOPPING SERVICE");
                 stopSelf();
+                // dont stop the service try again or send some error instead
             }
         }
 

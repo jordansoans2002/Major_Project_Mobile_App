@@ -41,7 +41,13 @@
         <service
             android:name=".service.NavigationService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice|location"/>
+
+        <service android:name=".service.BluetoothService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice|location"/>
 
         <activity
             android:name=".activity.PlaceInputActivity"

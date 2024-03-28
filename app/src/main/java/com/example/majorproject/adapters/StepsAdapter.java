@@ -2,6 +2,7 @@ package com.example.majorproject.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -14,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.majorproject.R;
+import com.example.majorproject.service.BluetoothService;
 import com.mappls.sdk.plugin.directions.DirectionsUtils;
 import com.mappls.sdk.plugin.directions.view.ManeuverView;
 import com.mappls.sdk.services.api.directions.models.LegStep;
@@ -76,9 +78,17 @@ public class StepsAdapter extends RecyclerView.Adapter<StepsAdapter.ViewHolder> 
                     startTime = System.currentTimeMillis();
                 }
                 downTime = System.currentTimeMillis() - startTime;
-                Timber.i("%s", downTime);
+//                Timber.i("%s", downTime);
                 if (downTime > 1000 && downTime < 1020 || downTime > 2000 && downTime < 2020 || downTime > 3080 && downTime < 3020) {
-//                    outputStream.write((""+downTime/1000 + legStep.maneuver().modifier() + "\r\n").getBytes());
+                    String msg = downTime/1000 + " " + legSteps.get(position).maneuver().modifier()+" angle: b"
+                            + legSteps.get(position).maneuver().bearingBefore()+" a"+legSteps.get(position).maneuver().bearingAfter();
+//                    BluetoothConnectionManager.sendData(msg);
+                    Timber.i("Sending data to bt");
+                    Intent data_out = new Intent(context, BluetoothService.class);
+                    data_out.setAction("SEND_DATA");
+                    data_out.putExtra("BT_DATA",msg);
+                    context.startService(data_out);
+
                     Toast.makeText(
                             context,
                             downTime/1000 + " " + legSteps.get(position).maneuver().modifier()+" angle: b"
@@ -88,7 +98,12 @@ public class StepsAdapter extends RecyclerView.Adapter<StepsAdapter.ViewHolder> 
                     ).show();
                 }
             }catch (Exception e){
-
+                Toast.makeText(
+                        context,
+                        e.getMessage(),
+                        Toast.LENGTH_LONG
+                ).show();
+                e.printStackTrace();
             }
 
             return true;

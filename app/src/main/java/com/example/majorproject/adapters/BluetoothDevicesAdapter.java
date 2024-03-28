@@ -40,8 +40,9 @@ public class BluetoothDevicesAdapter extends RecyclerView.Adapter<BluetoothDevic
             holder.item.setOnClickListener(view -> {
                 //create connection is blocking call so it creates  new thread
                 //indicate the device is trying to connect and highlight if connection succeeds
-//                BluetoothService.createBluetoothConnection(HomeFragment.devices.get(holder.getBindingAdapterPosition()),activity);
+//                BluetoothConnectionManager.createBluetoothConnection(HomeFragment.devices.get(holder.getBindingAdapterPosition()),activity);
                 Intent connectHelmet = new Intent(activity.getApplicationContext(), BluetoothService.class);
+                connectHelmet.setAction("CONNECT");
                 connectHelmet.putExtra("helmet_MAC",HomeFragment.devices.get(holder.getBindingAdapterPosition()).getAddress());
                 activity.startService(connectHelmet);
 
