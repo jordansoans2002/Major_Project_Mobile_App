@@ -2,9 +2,11 @@ package com.example.majorproject.service;
 
 import android.app.Activity;
 import android.app.Service;
+import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -19,6 +21,7 @@ import com.example.majorproject.utils.LocationSettingsManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -228,6 +231,32 @@ public class BluetoothService extends Service {
                 socket.connect();
                 connectedThread = new ConnectedThread(socket);
                 connectedThread.start();
+
+                bluetoothAdapter.getProfileProxy(getApplicationContext(),
+                        new BluetoothProfile.ServiceListener() {
+                            @Override
+                            public void onServiceConnected(int i, BluetoothProfile bluetoothProfile) {
+                                BluetoothA2dp headset = (BluetoothA2dp) bluetoothProfile;
+                                try {
+                                    Method connect = null;
+                                    connect = BluetoothA2dp.class.getDeclaredMethod("connect",BluetoothDevice.class);
+                                    connect.invoke(headset, device);
+                                } catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onServiceDisconnected(int i) {
+//                                Toast.makeText(
+//                                        activity,
+//                                        "Helmet disconnected",
+//                                        Toast.LENGTH_LONG
+//                                ).show();
+                            }
+                        },
+                        BluetoothProfile.A2DP);
+
             } catch (IOException | SecurityException e) {
                 try {
                     socket.close();
@@ -283,17 +312,10 @@ public class BluetoothService extends Service {
                     String readMessage = new String(buffer, 0, bytes);
                     Timber.d("Received message %s", readMessage);
 
-                    if(readMessage.startsWith("CRASH")){
-
-                    }
-
                     Intent data_in = new Intent("BT_DATA_IN");
                     data_in.putExtra("msg",readMessage);
                     data_in.putExtra("msg_size",bytes);
                     sendBroadcast(data_in);
-
-                    // Send the obtained bytes to the UI Activity via handler
-                    handler.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                 }
                 inputStream.close();
             } catch (IOException e) {

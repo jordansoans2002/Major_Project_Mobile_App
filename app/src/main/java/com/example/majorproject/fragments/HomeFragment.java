@@ -101,7 +101,7 @@ public class HomeFragment extends Fragment {
             else if(intent.getAction().equals("BT_DATA_IN")){
                 String msg = intent.getStringExtra("msg");
                 int bytes = intent.getIntExtra("msg_size",-1);
-                Timber.i("BT message %s size, %i",msg,bytes);
+                Timber.i("BT message %s size, %d",msg,bytes);
                 //update helmet info like battery left etc
             }
         }

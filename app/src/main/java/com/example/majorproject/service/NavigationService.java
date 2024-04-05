@@ -52,9 +52,6 @@ public class NavigationService extends Service {
     int currentStepNo = 0;
     List<LegStep> steps;
 
-    InputStream inputStream;
-    OutputStream outputStream;
-
     LocationEngine locationEngine;
     static final long DEFAULT_INTERVAL_IN_ms = 1000L;
     static final long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_ms * 3;
@@ -69,7 +66,7 @@ public class NavigationService extends Service {
                 int bytes = intent.getIntExtra("msg_size",-1);
                 if(msg==null)
                     return;
-                Timber.i("BT message %s size, %i",msg,bytes);
+                Timber.i("BT message %s size, %d",msg,bytes);
 
                 if(msg.startsWith("CRASH")){
                     CrashResponse.sendSms(currentLocation);
@@ -100,8 +97,8 @@ public class NavigationService extends Service {
                 if(dist < 10 && currentStepNo<steps.size()-1)
                     currentStep = steps.get(++currentStepNo);
 
-                String msg = currentStep.maneuver().modifier()+" angle: b"
-                        + currentStep.maneuver().bearingBefore()+" a"+currentStep.maneuver().bearingAfter();
+                int turnAngle = (int)(currentStep.maneuver().bearingBefore() - currentStep.maneuver().bearingAfter());
+                String msg = "{\"dist\":"+(int)dist+",\"angle\":"+turnAngle+"}";
 
                 Timber.i("Sending data to bt %s",msg);
 
@@ -147,8 +144,6 @@ public class NavigationService extends Service {
             Timber.i("received object=" + objReceived);
             route = (DirectionsRoute) objReceived;
             locationEngine = (LocationEngine) ((ObjectWrapperForBinder) intent.getExtras().getBinder("locationEngine")).getData();
-            inputStream = (InputStream) ((ObjectWrapperForBinder) intent.getExtras().getBinder("inputStream")).getData();
-            outputStream = (OutputStream) ((ObjectWrapperForBinder) intent.getExtras().getBinder("outputStream")).getData();
 
             getRouteDetails();
             createNotification(intent);

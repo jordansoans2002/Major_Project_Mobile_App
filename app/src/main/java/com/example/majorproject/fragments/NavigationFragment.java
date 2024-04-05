@@ -303,6 +303,15 @@ public class NavigationFragment extends Fragment implements OnMapReadyCallback, 
         });
 
         getRoutes.setOnClickListener(view -> {
+            if (mapplsMap == null) {
+                Toast.makeText(
+                        this.getContext(),
+                        "Map is not ready",
+                        Toast.LENGTH_SHORT
+                ).show();
+                return;
+            }
+
             String ori = originInput.getText().toString();
             if (ori.length() > 1 && destInput.getText().length() > 1) {
                 if (ori.equalsIgnoreCase("Current location")) {

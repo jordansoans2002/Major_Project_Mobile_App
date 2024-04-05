@@ -79,11 +79,13 @@ public class StepsAdapter extends RecyclerView.Adapter<StepsAdapter.ViewHolder> 
                 }
                 downTime = System.currentTimeMillis() - startTime;
 //                Timber.i("%s", downTime);
-                if (downTime > 1000 && downTime < 1020 || downTime > 2000 && downTime < 2020 || downTime > 3080 && downTime < 3020) {
+                if (downTime>900 && downTime%1000>0 && downTime%1000<20 && downTime<5500) {// downTime > 1000 && downTime < 1020 || downTime > 2000 && downTime < 2020 || downTime > 3000 && downTime < 3020 || downTime > 4000 && downTime < 4020 || downTime > 5000 && downTime < 5020) {
                     String msg = downTime/1000 + " " + legSteps.get(position).maneuver().modifier()+" angle: b"
                             + legSteps.get(position).maneuver().bearingBefore()+" a"+legSteps.get(position).maneuver().bearingAfter();
-//                    BluetoothConnectionManager.sendData(msg);
                     Timber.i("Sending data to bt");
+                    int turnAngle = (int)(legSteps.get(position).maneuver().bearingBefore() - legSteps.get(position).maneuver().bearingAfter());
+                    msg = "{\"dist\":"+downTime/1000+",\"angle\":"+turnAngle+"}";
+
                     Intent data_out = new Intent(context, BluetoothService.class);
                     data_out.setAction("SEND_DATA");
                     data_out.putExtra("BT_DATA",msg);
